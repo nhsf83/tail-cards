@@ -8,6 +8,7 @@ import { useDeck, type DeckData } from './data.ts';
 import { Inline } from './Inline.tsx';
 import { href, go } from './route.ts';
 import { useSpeech } from './useSpeech.ts';
+import { AnswerFeedback } from './AnswerFeedback.tsx';
 
 type Mode = 'srs' | 'chain' | 'all';
 type Phase = 'front' | 'back' | 'next';
@@ -364,6 +365,8 @@ function CardBack({
           <p>{lastAnswer}</p>
         </section>
       )}
+
+      <AnswerFeedback key={`${card.id}:${answer}`} card={card} answer={answer} />
 
       <section className="lead">
         <p className="label">두괄식</p>
