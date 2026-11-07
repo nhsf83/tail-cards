@@ -14,13 +14,13 @@ export class ClaudeProvider implements LLMProvider {
     this.client = new Anthropic({ apiKey: settings.apiKey, dangerouslyAllowBrowser: true, maxRetries: 2 });
   }
 
-  private async run(system: string, user: string, format?: Record<string, unknown>, signal?: AbortSignal): Promise<string> {
+  private async run(system: string, user: string, format?: Record<string, unknown>, signal?: AbortSignal, maxTokens = 64000): Promise<string> {
     const useFallback = MODELS.find((m) => m.id === this.settings.model)?.fallback ?? false;
     try {
       const stream = this.client.beta.messages.stream(
         {
           model: this.settings.model,
-          max_tokens: 64000,
+          max_tokens: maxTokens,
           system,
           messages: [{ role: 'user', content: user }],
           output_config: {
@@ -57,10 +57,10 @@ export class ClaudeProvider implements LLMProvider {
     return this.run(req.system, req.user, undefined, req.signal);
   }
 
-  async generateJSON<T>(req: { system: string; user: string; schema: z.ZodType<T>; signal?: AbortSignal }): Promise<T> {
+  async generateJSON<T>(req: { system: string; user: string; schema: z.ZodType<T>; signal?: AbortSignal; maxTokens?: number }): Promise<T> {
     const jsonSchema = z.toJSONSchema(req.schema, { target: 'draft-7' }) as Record<string, unknown>;
     delete jsonSchema.$schema;
-    const text = await this.run(req.system, req.user, jsonSchema, req.signal);
+    const text = await this.run(req.system, req.user, jsonSchema, req.signal, req.maxTokens);
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
